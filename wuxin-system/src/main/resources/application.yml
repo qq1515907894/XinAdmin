@@ -1,0 +1,19 @@
+server:
+  port: 8888  # 设置应用程序监听的端口号
+
+spring:
+  application:
+    name: my-application  # 应用程序名称
+
+# 日志配置
+logging:
+  level:
+    root: INFO  # 设置日志的根级别
+
+# 数据源配置（如使用数据库时）
+# spring:
+#   datasource:
+#     url: jdbc:mysql://localhost:3306/mydatabase
+#     username: root
+#     password: password
+#     driver-class-name: com.mysql.cj.jdbc.Driver
