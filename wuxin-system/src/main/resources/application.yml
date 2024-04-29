@@ -8,7 +8,14 @@ spring:
 # 日志配置
 logging:
   level:
-    root: INFO  # 设置日志的根级别
+    root: INFO
+    com:
+      example:
+        myapp: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+
 
 # 数据源配置（如使用数据库时）
 # spring:
