@@ -1,4 +1,4 @@
-package life.wuxin.common.log.annotation;
+package com.wuxin.common.log.annotation;
 import java.lang.annotation.*;
 
 /**
@@ -9,9 +9,22 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME) //注解在哪个阶段执行
 @Documented//生成文档
 public @interface Log {
-	// /** 操作事件     */
-	// String operation() default "";
 
-	// /** 日志类型 */
-	// String type();
-}
+		/**
+		 * 渠道 (默认: "web")
+		 */
+		String channel() default "web";
+		/**
+		 * 功能名称
+		 */
+		String name() default "";
+		/**
+		 * 方法名称
+		 */
+		String action() default "";
+
+		/**
+		 * 是否保存到数据库 (默认: false)
+		 */
+		boolean saveFlag() default false;
+	}
