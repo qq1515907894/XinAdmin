@@ -31,7 +31,7 @@ public class HelloController {
 	@Log()
 	@PostMapping("/hay")
 	public String sayHello(String hay) {
-		return "Hello, World!";
+		return "后台识别到已打开：" + hay;
 	}
 
 	@Log()
