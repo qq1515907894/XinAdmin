@@ -27,4 +27,14 @@ public @interface Log {
 		 * 是否保存到数据库 (默认: false)
 		 */
 		boolean saveFlag() default false;
+
+		/**
+		 * 是否简短输出日志
+		 */
+		boolean briefLog() default true;
+
+		/**
+		 * 是否换行输出日志
+		 */
+		boolean lineFeed() default false;
 	}

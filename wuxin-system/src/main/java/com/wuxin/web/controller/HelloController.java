@@ -29,10 +29,10 @@ public class HelloController {
 		return "Hello, World!";
 	}
 
-	@Log()
+	@Log(lineFeed = true)
 	@PostMapping("/hay")
-	public String sayHello(String hay) {
-		return "后台识别到已打开：" + hay;
+	public String sayHello(String hay,int hay2,float hay3,double hay4,boolean hay5) {
+		return "已收到：" + hay + hay2;
 	}
 
 	@Log()
@@ -41,7 +41,7 @@ public class HelloController {
 		return testUser;
 	}
 
-	@Log()
+	@Log(saveFlag = true)
 	@GetMapping("/abnormal")
 	public void abnormal() {
 		throw new RuntimeException("测试异常");

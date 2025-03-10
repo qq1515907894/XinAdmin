@@ -21,10 +21,12 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+
 
 /**
  * <p>
@@ -62,6 +64,17 @@ public class GlobalLogAspect {
 		ServletRequestAttributes servletRequestAttributes = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
 		// 获取当前请求的HttpServletRequest
 		HttpServletRequest request = servletRequestAttributes.getRequest();
+
+		// 获取方法签名
+		Signature signature = joinPoint.getSignature();
+		if (!(signature instanceof MethodSignature methodSignature)) {
+			return;
+		}
+		Method method = methodSignature.getMethod();
+
+		// 获取Log注解
+		Log log = method.getAnnotation(Log.class);
+
 		// 生成请求ID
 		String requestId = UUID.randomUUID().toString();
 		// 将请求ID放入MDC中
@@ -70,21 +83,43 @@ public class GlobalLogAspect {
 		// 创建日志信息字符串
 		StringBuffer logInfo = new StringBuffer();
 		logInfo.append("\n--- 请求日志 ---");
-		logInfo.append("\n请求ID: ").append(requestId);
+		if (!log.briefLog()){
+			logInfo.append("\n请求ID: ").append(requestId);
+			logInfo.append("\nSession: ").append(request.getSession().getId());
+		}
 		logInfo.append("\n访问URI: ").append(request.getRequestURI());
-		logInfo.append("\nSession: ").append(request.getSession().getId());
 		logInfo.append("\n访问IP: ").append(RequestUtil.getIpAddress(request));
 		logInfo.append("\n类方法: ").append(joinPoint.getSignature().getDeclaringTypeName())
 				.append(".").append(joinPoint.getSignature().getName());
 		// 处理参数
 		Object[] args = joinPoint.getArgs();
 		List<Object> filteredArgs = new ArrayList<>();
-		for (Object arg : args) {
-			if (!(arg instanceof HttpServletRequest)) {
-				filteredArgs.add(arg);
+
+		// 获取方法参数
+		Parameter[] parameters = method.getParameters();
+		for (int i = 0; i < args.length; i++) {
+			// 排除 HttpServletRequest 类型的参数
+			if (!(args[i] instanceof HttpServletRequest)) {
+				// 获取参数名称
+				String paramName = parameters[i].getName();
+				// 获取参数类型（方法签名的声明类型）
+				String paramType = parameters[i].getType().getSimpleName(); // 获取声明的类型
+
+				if (!log.lineFeed()){
+					// 记录参数名、声明类型和参数值
+					filteredArgs.add(paramName + "(" + paramType + ")=" + JSONObject.toJSONString(args[i]));
+				}else {
+					// 记录参数名、声明类型和参数值
+					filteredArgs.add("\n" + paramName + "(" + paramType + ")=" + JSONObject.toJSONString(args[i]));
+				}
 			}
 		}
-		logInfo.append("\n参数: ").append(JSONObject.toJSONString(filteredArgs));
+
+		logInfo.append("\n参数: ").append(filteredArgs);
+
+
+
+
 
 		// 设置日志颜色
 		String logMessage = logInfo.toString();
@@ -142,9 +177,6 @@ public class GlobalLogAspect {
 				String errorLog = "\u001B[31m" + "异常日志: " + e.getMessage() + "\u001B[0m"; // 红色
 				logger.error(errorLog);
 			}
-
-
-
 			sysUserLogService.insert(userLog);
 		}
 			MDC.clear();
