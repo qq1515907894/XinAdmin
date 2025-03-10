@@ -11,6 +11,7 @@ import java.lang.annotation.*;
 public @interface Log {
 	// /** 操作事件     */
 	// String operation() default "";
+
 	// /** 日志类型 */
 	// String type();
 }
