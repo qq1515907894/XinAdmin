@@ -1,6 +1,7 @@
-package life.wuxin.web;
+package com.wuxin.web.controller;
 
-import life.wuxin.common.log.annotation.Log;
+import com.wuxin.common.log.annotation.Log;
+import com.wuxin.web.domain.TestUser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,5 +39,11 @@ public class HelloController {
 	@PostMapping("/me")
 	public TestUser me(@RequestBody TestUser testUser) {
 		return testUser;
+	}
+
+	@Log()
+	@GetMapping("/abnormal")
+	public void abnormal() {
+		throw new RuntimeException("测试异常");
 	}
 }

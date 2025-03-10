@@ -1,4 +1,4 @@
-package life.wuxin.web;
+package com.wuxin.web.domain;
 
 import lombok.Data;
 
