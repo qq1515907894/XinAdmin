@@ -1,8 +1,19 @@
 package com.wuxin.config;
 
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.annotation.WebFilter;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.io.IOException;
+import java.util.logging.Filter;
+import java.util.logging.LogRecord;
 
 /**
  * <p>
@@ -20,9 +31,9 @@ public class CorsConfig {
 	public WebMvcConfigurer corsConfigurer() {
 		return new WebMvcConfigurer() {
 			@Override
-			public void addCorsMappings(org.springframework.web.servlet.config.annotation.CorsRegistry registry) {
-				registry.addMapping("/**")  // 允许所有路径
-						.allowedOrigins("*") // 允许所有域（生产环境建议改为具体域名）
+			public void addCorsMappings(CorsRegistry registry) {
+				registry.addMapping("/**")
+						.allowedOriginPatterns("*") // ✅ 允许所有域，替代 allowedOrigins("*")
 						.allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
 						.allowedHeaders("*")
 						.allowCredentials(true);
@@ -30,3 +41,4 @@ public class CorsConfig {
 		};
 	}
 }
+
