@@ -5,6 +5,7 @@
     <modules>
         <module>wuxin-system</module>
         <module>wuxin-common</module>
+        <module>wuxin-common/wuxin-common-core</module>
     </modules>
     <parent>
         <groupId>org.springframework.boot</groupId>

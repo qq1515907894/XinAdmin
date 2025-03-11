@@ -117,10 +117,6 @@ public class GlobalLogAspect {
 
 		logInfo.append("\n参数: ").append(filteredArgs);
 
-
-
-
-
 		// 设置日志颜色
 		String logMessage = logInfo.toString();
 		String coloredLogMessage = "\u001B[32m" + logMessage + "\u001B[0m"; // 绿色
