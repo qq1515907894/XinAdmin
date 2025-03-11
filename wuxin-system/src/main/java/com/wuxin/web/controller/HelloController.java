@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.*;
 public class HelloController {
 
 	@Log()
-	// @CrossOrigin(origins = "https://wuxin.com")
 	@GetMapping("/hello")
 	public String sayHello() {
 		log.info("hello world");

@@ -89,7 +89,11 @@ public class GlobalLogAspect {
 		}
 		logInfo.append("\n访问URI: ").append(request.getRequestURI());
 		logInfo.append("\n访问IP: ").append(RequestUtil.getIpAddress(request));
-		logInfo.append("\n类方法: ").append(joinPoint.getSignature().getDeclaringTypeName())
+		String declaringTypeName = joinPoint.getSignature().getDeclaringTypeName();
+
+		// 处理类名 后续优化在配置文件配置批量处理
+		String result = declaringTypeName.replace("com.wuxin.web.controller.", "");
+		logInfo.append("\n类方法: ").append(result)
 				.append(".").append(joinPoint.getSignature().getName());
 		// 处理参数
 		Object[] args = joinPoint.getArgs();
