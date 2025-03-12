@@ -4,6 +4,7 @@ import com.wuxin.common.log.annotation.Log;
 import com.wuxin.common.log.domain.SysUserLog;
 import com.wuxin.common.log.services.SysUserLogService;
 import com.wuxin.common.log.utils.RequestUtil;
+import com.wuxin.exeption.BusinessException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.Signature;
@@ -18,8 +19,6 @@ import com.alibaba.fastjson.JSONObject;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
@@ -29,12 +28,9 @@ import java.util.UUID;
 
 
 /**
- * <p>
- * 全局日志管理
- * <p>
+ * <p> 全局日志管理 </p>
  *
  * @author wuxin
- * @className GlobalLogAspect
  * @create 2025-03-10 14:37
  * @Version 1.0
  */
@@ -49,104 +45,88 @@ public class GlobalLogAspect {
 	public GlobalLogAspect(SysUserLogService sysUserLogService) {
 		this.sysUserLogService = sysUserLogService;
 	}
+
 	/**
 	 * 切入点：拦截 Controller 方法
 	 */
 	@Pointcut("execution(public * com.wuxin..*Controller.*(..))")
-	public void Log() {}
+	public void logPointcut() {}
 
-	/*
-	  前置通知，记录请求信息
+	/**
+	 * 前置通知，记录请求信息
 	 */
-	@Before("Log()")
+	@Before("logPointcut()")
 	public void doBefore(JoinPoint joinPoint) {
-		// 获取当前请求的ServletRequestAttributes
 		ServletRequestAttributes servletRequestAttributes = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
-		// 获取当前请求的HttpServletRequest
 		HttpServletRequest request = servletRequestAttributes.getRequest();
 
-		// 获取方法签名
 		Signature signature = joinPoint.getSignature();
 		if (!(signature instanceof MethodSignature methodSignature)) {
 			return;
 		}
 		Method method = methodSignature.getMethod();
-
-		// 获取Log注解
 		Log log = method.getAnnotation(Log.class);
 
 		// 生成请求ID
 		String requestId = UUID.randomUUID().toString();
-		// 将请求ID放入MDC中
 		MDC.put("requestId", requestId);
 
-		// 创建日志信息字符串
-		StringBuffer logInfo = new StringBuffer();
-		logInfo.append("\n--- 请求日志 ---");
-		if (!log.briefLog()){
+		// 构建日志信息
+		StringBuffer logInfo = new StringBuffer("\n--- 请求日志 ---");
+		if (log == null || !log.briefLog()) {
 			logInfo.append("\n请求ID: ").append(requestId);
 			logInfo.append("\nSession: ").append(request.getSession().getId());
 		}
 		logInfo.append("\n访问URI: ").append(request.getRequestURI());
 		logInfo.append("\n访问IP: ").append(RequestUtil.getIpAddress(request));
-		String declaringTypeName = joinPoint.getSignature().getDeclaringTypeName();
+		String declaringTypeName = signature.getDeclaringTypeName();
+		String className = declaringTypeName.replace("com.wuxin.web.controller.", "");
+		logInfo.append("\n类方法: ").append(className).append(".").append(signature.getName());
 
-		// 处理类名 后续优化在配置文件配置批量处理
-		String result = declaringTypeName.replace("com.wuxin.web.controller.", "");
-		logInfo.append("\n类方法: ").append(result)
-				.append(".").append(joinPoint.getSignature().getName());
 		// 处理参数
 		Object[] args = joinPoint.getArgs();
 		List<Object> filteredArgs = new ArrayList<>();
-
-		// 获取方法参数
 		Parameter[] parameters = method.getParameters();
 		for (int i = 0; i < args.length; i++) {
-			// 排除 HttpServletRequest 类型的参数
 			if (!(args[i] instanceof HttpServletRequest)) {
-				// 获取参数名称
 				String paramName = parameters[i].getName();
-				// 获取参数类型（方法签名的声明类型）
-				String paramType = parameters[i].getType().getSimpleName(); // 获取声明的类型
-
-				if (!log.lineFeed()){
-					// 记录参数名、声明类型和参数值
+				String paramType = parameters[i].getType().getSimpleName();
+				if (log == null || !log.lineFeed()) {
 					filteredArgs.add(paramName + "(" + paramType + ")=" + JSONObject.toJSONString(args[i]));
-				}else {
-					// 记录参数名、声明类型和参数值
+				} else {
 					filteredArgs.add("\n" + paramName + "(" + paramType + ")=" + JSONObject.toJSONString(args[i]));
 				}
 			}
 		}
 
 		logInfo.append("\n参数: ").append(filteredArgs);
-
-		// 设置日志颜色
-		String logMessage = logInfo.toString();
-		String coloredLogMessage = "\u001B[32m" + logMessage + "\u001B[0m"; // 绿色
-		logger.info(coloredLogMessage);
+		logger.info("\u001B[32m" + logInfo + "\u001B[0m"); // 绿色日志
 	}
 
-	@AfterReturning(pointcut = "Log()", returning = "result")
-	public void doAfterReturning(JoinPoint joinPoint,Object result) {
+	/**
+	 * 返回通知
+	 */
+	@AfterReturning(pointcut = "logPointcut()", returning = "result")
+	public void doAfterReturning(JoinPoint joinPoint, Object result) {
 		handleLog(joinPoint, null, result);
 	}
 
 	/**
 	 * 异常通知：方法抛出异常时记录日志
 	 */
-	@AfterThrowing(pointcut = "Log()", throwing = "e")
+	@AfterThrowing(pointcut = "logPointcut()", throwing = "e")
 	public void afterThrowing(JoinPoint joinPoint, Exception e) {
+		System.out.println("进入异常处理逻辑: " + e.getMessage());
 		handleLog(joinPoint, e, null);
 	}
 
+	/**
+	 * 统一日志处理逻辑
+	 */
 	private void handleLog(JoinPoint joinPoint, Exception e, Object result) {
-		// 获取当前请求的ServletRequestAttributes
 		ServletRequestAttributes servletRequestAttributes = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
-		// 获取当前请求的HttpServletRequest
 		HttpServletRequest request = servletRequestAttributes.getRequest();
 
-		// 获取方法签名
 		Signature signature = joinPoint.getSignature();
 		if (!(signature instanceof MethodSignature)) {
 			return;
@@ -154,12 +134,33 @@ public class GlobalLogAspect {
 		MethodSignature methodSignature = (MethodSignature) signature;
 		Method method = methodSignature.getMethod();
 
-		// 获取Log注解
 		Log log = method.getAnnotation(Log.class);
 
-		if (log != null && log.saveFlag()) {
+		SysUserLog userLog = new SysUserLog();
 
-			SysUserLog userLog = new SysUserLog();
+		// 处理异常
+		if (e != null) {
+			System.out.println("异常类型：" + e.getClass().getName());
+
+			// 处理 BusinessException
+			int errorCode = 5000; // 默认错误码
+			String errorMessage = e.getMessage();
+
+			if (e instanceof BusinessException businessException) {
+				errorCode = businessException.getCode();
+				errorMessage = businessException.getMessage();
+			} else if (e.getCause() instanceof BusinessException businessException) {
+				errorCode = businessException.getCode();
+				errorMessage = businessException.getMessage();
+			}
+
+			userLog.setErrCode(errorCode);
+			userLog.setErrMsg(errorMessage);
+
+			logger.error("\u001B[31m进入异常处理逻辑: 错误码={}，错误信息={} \u001B[0m", errorCode, errorMessage);
+		}
+
+		if (log != null && log.saveFlag()) {
 			userLog.setRequestId(MDC.get("requestId"));
 			userLog.setSessionId(request.getSession().getId());
 			userLog.setChannel(log.channel());
@@ -170,17 +171,13 @@ public class GlobalLogAspect {
 			userLog.setIp(RequestUtil.getIpAddress(request));
 			userLog.setLogTime(new Date());
 
-			// 记录异常信息
-			if (e != null) {
-				userLog.setErrMsg(e.getMessage());
 
-				String errorLog = "\u001B[31m" + "异常日志: " + e.getMessage() + "\u001B[0m"; // 红色
-				logger.error(errorLog);
-			}
+
 			sysUserLogService.insert(userLog);
 		}
-			MDC.clear();
-		}
+		MDC.clear();
+	}
+
 
 
 }

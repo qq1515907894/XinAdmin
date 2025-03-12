@@ -38,6 +38,8 @@ public class SysUserLog {
 	private String ip;
 	// 错误信息
 	private String errMsg;
+
+	private Integer errCode;
 	// 日志时间
 	private Date logTime;
 }
