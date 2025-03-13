@@ -1,9 +1,28 @@
 server:
+  servlet:
+    context-path: /
   port: 8888  # 设置应用程序监听的端口号
 
 spring:
+  web:
+    resources:
+      add-mappings: false
   application:
     name: my-application  # 应用程序名称
+  datasource:
+    url: jdbc:mysql://2p.wuxin.life:3306/xin-admin?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true
+    username: xin-admin
+    password: 62y57BA5iXTekFcX
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  main:
+      allow-bean-definition-overriding: true
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
 
 # 日志配置
 logging:

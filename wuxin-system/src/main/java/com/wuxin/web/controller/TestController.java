@@ -26,11 +26,12 @@ public class TestController {
 		throw new BusinessException(4001, "业务逻辑错误测试");
 	}
 
-	@GetMapping("/nullpointer")
+	@GetMapping("/nullPointer")
 	public void throwNullPointerException() {
 		throw new NullPointerException("空指针异常");
 	}
 
+	// todo 此接口没有适配异常捕获和日志输出
 	@PostMapping("/validate")
 	public void validateRequest(@Valid @RequestBody UserRequest request) {
 		// 仅用于测试参数校验异常

@@ -13,6 +13,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>wuxin-common-log</module>
+        <module>wuxin-common-mybatis-plus</module>
     </modules>
 
     <properties>
